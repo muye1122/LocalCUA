@@ -15,7 +15,9 @@ pip install -r requirements-dev.txt
 python -m pytest tests -q -p no:cacheprovider
 ```
 
-测试不依赖显示器：`agent/core.py` 的截图/模型/执行器均可注入，CI 在 Ubuntu 上直接跑。
+测试不依赖真实显示器：`conftest.py` 已把键鼠、截图、输入法全部隔离为假对象。
+CI 在 Ubuntu 上只做 `compileall` 语法检查（全量 GUI 测试需 Windows 桌面与本机 Ollama，
+Linux runner 无法如实复现）；本地用 `python -m pytest -q` 跑完整的 281 项。
 
 ## 代码约定
 
