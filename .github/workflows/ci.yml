@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 本项目是 Windows GUI agent：全量测试需要真实桌面、Win32 API、pyautogui
+      # 与本机 Ollama 模型，Linux runner 无法如实复现。CI 只做纯标准库的语法
+      # 检查，不给出误导性的红叉；281 项自动化测试请在 Windows + 项目 venv 下
+      # 运行 `python -m pytest -q`（测试里已把键鼠 / 截图 / 输入法全部隔离）。
+      - name: Compile all modules
+        run: python -m compileall -q agent ui tools run.py desktop.py conftest.py tests

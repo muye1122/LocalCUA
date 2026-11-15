@@ -1,0 +1,39 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ---- 虚拟环境 ----
+.venv/
+venv/
+env/
+
+# ---- 本地数据 / 日志 / 截图 ----
+data/
+runs/
+# 注意：这里不再全局忽略 *.png，否则 README 里的截图/GIF 无法入库。
+# 运行时截图靠上面的 data/ 规则忽略，文档图片（docs/ 等）正常跟踪。
+agent_sandbox.wsb
+
+# ---- 测试缓存 ----
+.pytest_cache/
+*.cover
+
+# ---- 编辑器 / 系统 ----
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- 密钥 ----
+.env
+models/
+.venv/
+data/
+__pycache__/
+*.log

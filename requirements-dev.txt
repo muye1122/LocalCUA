@@ -1,0 +1,8 @@
+# 开发 / CI 依赖（不含 pyautogui 等需要显示器的运行依赖）
+pytest
+pillow
+pyyaml
+requests
+fastapi
+uvicorn[standard]
+websockets

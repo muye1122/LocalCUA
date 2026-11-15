@@ -1,0 +1,46 @@
+[project]
+name = "localcua"
+version = "0.1.0"
+description = "本地、免费、可扩展的电脑操作智能体（Computer-Use Agent）"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "LocalCUA contributors" }]
+keywords = ["computer-use", "agent", "llm", "gui-automation", "ollama", "vlm"]
+dependencies = [
+    "pyautogui",
+    "pillow",
+    "pyyaml",
+    "fastapi",
+    "uvicorn[standard]",
+    "websockets",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "requests"]
+omniparser = []
+
+[project.scripts]
+localcua = "run:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+# flat-layout：项目根同时有 agent/ 和 ui/ 两个顶层包，必须显式声明，
+# 否则 setuptools 自动发现会报 "Multiple top-level packages discovered"。
+[tool.setuptools]
+packages = ["agent", "ui"]
+py-modules = ["run"]
+include-package-data = true
+
+# 把 config.yaml 打进 wheel，使 `localcua` 命令在 pip 安装后也能找到默认配置
+[tool.setuptools.package-data]
+agent = ["config.yaml"]
+
+# 只收集 tests/。tools/ 下有几个名字带 test 的「诊断探针」
+# （如 text_select_test.py），它们是直接跑的脚本，模块级就要读 data/ 下的
+# 真实截图清单，被 pytest 导入会在收集阶段直接抛异常，整轮测试连跑都跑不起来。
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

@@ -1,0 +1,10 @@
+pyautogui
+pillow
+pyyaml
+fastapi
+uvicorn[standard]
+websockets
+
+# ---- 可选（按需安装，不装也能跑默认模式）----
+# ui-tars        : grounding.backend=ui_tars 时需要  -> pip install ui-tars
+# openai         : 仅当你想显式用 openai 包时才需要（本代码用标准库联网，可不装）

@@ -1,0 +1,90 @@
+# ============================================================
+# LocalCUA 默认配置（此文件会被打包进 wheel，供 `localcua` 命令使用）
+# 想自定义时，请编辑项目根目录的 config.yaml（那份优先于本文件）。
+# 任何字段都可用环境变量覆盖（前缀 CU_），见各字段注释
+# ============================================================
+
+provider:
+  type: ollama                      # ollama | openai（兼容任何 OpenAI 格式后端）
+  ollama:
+    base_url: http://localhost:11434/api/chat
+    model: qwen3vl:8b               # 环境变量 CU_MODEL 可覆盖
+  openai:
+    base_url: https://api.openai.com/v1/chat/completions
+    api_key: ""                     # 推荐用环境变量 CU_OPENAI_KEY
+    model: gpt-4o
+
+agent:
+  max_steps: 40                     # 环境变量 CU_MAX_STEPS
+  step_pause: 0.5                   # 每步前停顿(秒) CU_PAUSE；只留给 UI 刷新，1.5 秒×10步=白等 15 秒
+  temperature: 0.1                  # CU_TEMP（与主 config.yaml 保持一致）
+  history_window: 6                 # 回看最近几步历史
+  max_screenshots: 50               # 运行中滚动保留的截图张数，超出删最旧；结束时全删
+  verify_screen_change: true         # 模型自称"不会产生新内容"时，仍用像素差兜底校验
+
+# grounding：精准点击的关键。
+#   vlm         : 默认。复用主模型自己框出可交互元素，零额外依赖、开箱即用
+#   none        : 关闭检测，回到“像素+绝对坐标”行为（最快）
+#   omniparser  : 高精度可选项，需另起 OmniParser 服务（见 README）
+#   ui_tars     : 使用 UI-TARS 系模型，输出 0~factor 归一化坐标（factor 默认 1000）
+#   yolo_caption: 推荐。本地 ONNX YOLO(OmniParser icon_detect) 检测元素 + 7B 起名 + 程序匹配，
+#                 模型只需用 element_desc 说出要点什么（实测点中率最高，见 tools/ 各实验脚本）
+grounding:
+  backend: yolo_caption             # yolo_caption | vlm | none | omniparser | ui_tars
+  yolo_caption:
+    conf: 0.3                       # YOLO 置信度阈值
+    max_elements: 80
+    skip_below: 3                   # 缺名元素少于此数就不批量起名（一次调用固定 4~5 秒）
+  vlm:
+    max_elements: 40                # 每屏最多返回的元素数
+  omniparser:
+    server_url: http://localhost:8000   # 另起 OmniParser 服务（见 README）
+  ui_tars:
+    factor: 1000
+    # model_type 曾写死 qwen25vl（已删除的 qwen2.5vl:7b）。当前 backend=yolo_caption，
+    # 这段不生效；真要启用 ui_tars 时请填实际用的模型名。
+
+# 规划器：把大任务拆成子任务清单，长任务不跑偏
+planner:
+  # 关掉：7B 会把「打开记事本」拆成 Win7 时代的老路径（所有程序→附件→记事本），
+  # Win11 根本没有这两级，模型从此一路在找不存在的东西。单步决策（每步只看当前
+  # 屏幕做一个动作）比错误的长计划可靠得多。
+  enabled: false
+  replan_on_fail: false
+
+# 校验器：每次动作后回截屏让 VLM 确认“点中没/成功了没”，失败触发重规划
+# 注意：开启会多一次模型调用，更慢但更稳。默认关，按需开。
+validator:
+  enabled: false
+
+# 安全：越界检查 + 急停 + 高风险操作人工确认闸门
+safety:
+  failsafe: true                   # 鼠标甩到屏幕左上角(0,0)急停
+  clamp_coords: true
+  confirm_risky: true              # 命中风险关键词需人工确认
+  risk_keywords:
+    - delete
+    - remove
+    - format
+    - shutdown
+    - uninstall
+    - send
+    - pay
+    - transfer
+    - 删除
+    - 格式化
+    - 关机
+    - 卸载
+    - 发送
+    - 付款
+    - 转账
+    - 清空
+
+# 沙箱：在隔离的 Windows 沙箱里跑 Agent，碰不到真实数据。
+# 用 `python run.py --make-sandbox` 生成 agent_sandbox.wsb 后双击启动。
+sandbox:
+  enabled: false
+
+web:
+  host: 127.0.0.1
+  port: 7860
