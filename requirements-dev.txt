@@ -3,6 +3,9 @@ pytest
 pillow
 pyyaml
 requests
+numpy
+onnxruntime
+rapidocr
 fastapi
 uvicorn[standard]
 websockets

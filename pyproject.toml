@@ -14,6 +14,9 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "websockets",
+    "numpy",
+    "onnxruntime",
+    "rapidocr",
 ]
 
 [project.optional-dependencies]

@@ -5,6 +5,12 @@ fastapi
 uvicorn[standard]
 websockets
 
-# ---- 可选（按需安装，不装也能跑默认模式）----
+# ---- 默认 grounding.backend: yolo_caption 的硬依赖 ----
+numpy
+onnxruntime
+rapidocr
+
+# ---- 可选（按需安装）----
+# requests       : 仅 tools/ 里几个联网探测脚本用到，主链路不需要
 # ui-tars        : grounding.backend=ui_tars 时需要  -> pip install ui-tars
 # openai         : 仅当你想显式用 openai 包时才需要（本代码用标准库联网，可不装）

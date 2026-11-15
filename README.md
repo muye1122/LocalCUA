@@ -82,6 +82,20 @@ ollama pull qwen3vl:8b       # 任意支持图像的本地模型均可
 pip install -r requirements.txt
 ```
 
+> **默认 `grounding.backend: yolo_caption` 还需要一个约 80MB 的元素检测权重。**
+> `models/` 被 `.gitignore` 排除，不在仓库里，必须手动下载一次：
+>
+> ```bash
+> mkdir -p models/icon_detect
+> curl -L -o models/icon_detect/model.onnx \
+>   "https://www.modelscope.cn/models/onnx-community/OmniParser-v2.0_icon_detect/resolve/master/onnx/model.onnx"
+> ```
+>
+> 想先零额外依赖跑通闭环，把 `config.yaml` 的 `grounding.backend` 改成 `vlm`
+> （只靠视觉模型框元素，精度略低但不需要 ONNX 权重）。
+>
+> 装完可以先跑 `python tools/selfcheck.py`（不点鼠标、不打字）确认环境齐了。
+
 > 也可以把整个项目装成可复用的命令行工具（支持 `pipx install .` / `uvx`）：`pip install .`，之后直接敲 `localcua`（等价于 `python run.py`）。打包配置已显式声明 `agent` / `ui` 两个包与 `config.yaml`，不会出现 flat-layout 构建失败。
 
 > 需要 Python 3.10+，且 **pyautogui 依赖图形环境**（Windows 原生最佳；macOS/Linux 需自行装好 scrot/Xvfb 等）。Windows 沙箱隔离见下文。
@@ -201,7 +215,7 @@ pip install onnxruntime
 
 ```bash
 # 下 qwen2.5-coder:7b（写代码用的那个），下完自动导入 ollama
-python tools/fetch_gguf.py --conns 4 --out D:/models --create qwen2.5-coder:7b
+python tools/fetch_gguf.py --conns 4 --out ./models --create qwen2.5-coder:7b
 
 # 中断了重跑同一条命令即可续传；只校验已有文件：
 python tools/fetch_gguf.py --check
@@ -361,21 +375,26 @@ python tools/fetch_gguf.py --check
 ```
 LocalCUA/
 ├── run.py                 # 统一入口：Web / CLI / 生成沙箱配置
-├── config.yaml            # 集中配置
+├── desktop.py             # 桌面独立窗口启动器（Edge --app 模式）
+├── config.yaml            # 集中配置（pip 安装后回退 agent/config.yaml）
 ├── agent/
 │   ├── config.py          # 配置加载
 │   ├── models.py          # 多模型客户端（Ollama / OpenAI 兼容）
 │   ├── grounding.py       # 元素定位：VLM / OmniParser / UI-TARS / none
 │   ├── yolo_grounding.py  # 默认方案：YOLO 检测 + 8B 起名 + 程序匹配 + 位置启发
 │   ├── safety.py          # 安全闸门
-│   ├── actions.py         # 动作执行（鼠标键盘）
+│   ├── actions.py         # 动作执行（鼠标键盘，含 IME 与 no-send 护栏）
 │   ├── planner.py         # 任务拆解与重规划
 │   ├── validator.py       # 执行后回看校验
 │   ├── memory.py          # 轨迹记录与回放
-│   └── core.py            # 主循环编排
+│   ├── scratchpad.py      # 任务内草稿
+│   ├── long_memory.py     # 跨任务长期记忆（data/long_memory.json）
+│   └── core.py            # 主循环编排与 17 个确定性模板
 ├── ui/web.py              # FastAPI + 自包含页面 + WebSocket
-├── tools/sandbox.py       # Windows Sandbox 配置生成
-└── tests/                 # pytest 单测（逻辑层，无需显示器）
+├── tools/                 # 真机验证 / 自检 / 模型下载等一次性脚本
+├── tests/                 # 281 项 pytest（假模型 + 假键鼠，不联网不占 GPU）
+├── .github/workflows/ci.yml  # 仅做 compileall 语法检查
+└── README.md              # 含「技术复盘：真机踩坑链」
 ```
 
 ---
@@ -476,13 +495,38 @@ C 代码模板真机 22.8s `DONE`，编译通过并输出 `5050`。
 ## ❓ 常见问题
 
 **Q: 一定要 Windows 吗？**
-核心逻辑跨平台，但 `pyautogui` 的实际鼠标键盘控制在 Windows 上最顺滑；macOS/Linux 需自行补齐系统依赖。
+逻辑层可跨平台跑单元测试（281 项，测试里键鼠 / 截图 / 输入法都已隔离），
+但 **GUI 操作层是 Windows 绑定的**：Win32 窗口枚举、桌面 `SysListView32` 图标读取、
+微信 / QQ 窗口判定、UWP 前台进程识别都只在 Windows 可用。macOS / Linux 目前只能跑逻辑层。
 
-**Q: 默认为什么用 VLM grounding 而不是 OmniParser？**
-VLM grounding 零额外依赖、开箱即用，适合先跑起来；要更高精度再切 OmniParser。
+**Q: 默认的元素定位方案是什么？**
+默认 `yolo_caption`：用 OmniParser 提供的 `icon_detect` ONNX 小模型找出可点元素，
+再让本地 8B 给它们起名、由程序按文本 + 位置选中，不另起服务、不依赖 GPU。
+代价是要手动下载那个 80MB 权重（见「快速开始」第 2 步）。
+想零额外依赖就改成 `vlm`；想接完整 OmniParser 服务再改成 `omniparser`。
 
 **Q: 模型一直点错怎么办？**
 调高 `agent.step_pause` 便于观察；开启 `validator` 做回看确认；或换更大的本地视觉模型。
+
+---
+
+## 🙏 相关开源项目与依赖
+
+本项目以 **pip 包 / 模型权重 / HTTP 接口** 的形式使用这些开源组件：
+
+| 组件 | 用途 |
+|---|---|
+| [Ollama](https://ollama.com)、Qwen3-VL 8B / Qwen2.5-Coder 7B | 本地推理与视觉决策 |
+| [OmniParser](https://github.com/microsoft/OmniParser) 的 `icon_detect` ONNX | 默认方案的图标 / 控件检测权重 |
+| [RapidOCR](https://github.com/RapidAI/RapidOCR) | 屏幕文字识别 |
+| pyautogui / Pillow / NumPy / onnxruntime | 键鼠模拟与图像处理 |
+| FastAPI / Uvicorn | 本地 Web UI |
+
+同领域的 Computer-Use Agent 还有 `trycua/cua`、`UI-TARS`、
+`tochpita/local-ai-agent-v6` 等。**「截屏 → 模型决策 → 键鼠执行」是这个领域的通用范式**，
+各家在感知方式、动作空间与安全边界上的取舍差别很大。本项目的具体做法集中在
+17 个确定性模板、青蛙眼帧差与进场确认、微信白名单三道闸、动作后观察窗、
+跨任务长期记忆，以及 [技术复盘](#-技术复盘真机踩坑链) 里的真机定位过程。
 
 ---
 
