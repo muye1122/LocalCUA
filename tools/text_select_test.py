@@ -45,7 +45,7 @@ targets = [
 
 answers = []
 for t in targets:
-    payload = {"model": "qwen2.5vl:7b", "prompt": f"{system}\n\n要点击：{t}",
+    payload = {"model": "qwen3vl:8b", "prompt": f"{system}\n\n要点击：{t}",
                "stream": False, "options": {"temperature": 0, "num_predict": 40}}
     r = requests.post(f"{OLLAMA}/api/generate", json=payload, timeout=300)
     a = r.json().get("response", "").strip().splitlines()[0]

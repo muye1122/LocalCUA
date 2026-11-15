@@ -83,18 +83,24 @@ pip install -r requirements.txt
 ```
 
 > **默认 `grounding.backend: yolo_caption` 还需要一个约 80MB 的元素检测权重。**
-> `models/` 被 `.gitignore` 排除，不在仓库里，必须手动下载一次：
+> `models/` 被 `.gitignore` 排除，不在仓库里，下载一次即可：
 >
 > ```bash
-> mkdir -p models/icon_detect
-> curl -L -o models/icon_detect/model.onnx \
->   "https://www.modelscope.cn/models/onnx-community/OmniParser-v2.0_icon_detect/resolve/master/onnx/model.onnx"
+> python tools/setup_grounding.py          # 自动下载 + 断点续传 + 完整性校验
+> python tools/setup_grounding.py --check # 只看在不在，不联网
 > ```
 >
+> Windows 上想手写也行（PowerShell，注意是 `curl.exe` 不是 `curl` 别名）：
+>
+> ```powershell
+> New-Item -ItemType Directory -Force models\icon_detect | Out-Null
+> curl.exe -L -o models\icon_detect\model.onnx "https://www.modelscope.cn/models/onnx-community/OmniParser-v2.0_icon_detect/resolve/master/onnx/model.onnx"
+> ```
+>
+> 网络有 TLS 中间代理、报证书错误时给脚本加 `--no-verify`。
 > 想先零额外依赖跑通闭环，把 `config.yaml` 的 `grounding.backend` 改成 `vlm`
 > （只靠视觉模型框元素，精度略低但不需要 ONNX 权重）。
->
-> 装完可以先跑 `python tools/selfcheck.py`（不点鼠标、不打字）确认环境齐了。
+> 装完跑 `python tools/selfcheck.py`（不点鼠标、不打字）确认环境齐了。
 
 > 也可以把整个项目装成可复用的命令行工具（支持 `pipx install .` / `uvx`）：`pip install .`，之后直接敲 `localcua`（等价于 `python run.py`）。打包配置已显式声明 `agent` / `ui` 两个包与 `config.yaml`，不会出现 flat-layout 构建失败。
 
@@ -138,6 +144,9 @@ Agent 会自动截屏、思考、操作，并把每步日志实时显示出来�
 ## ⚙️ 配置（`config.yaml`）
 
 所有字段都可用环境变量覆盖（前缀 `CU_`），便于不同机器/场景切换。
+源码模式读项目根目录的 `config.yaml`；`pip install .` 之后请用
+`LOCALCUA_CONFIG=<你的 config.yaml>` 指定配置（wheel 内置的是 `agent/config.yaml`，
+两份已保持同步，改配置时不要只改其中一份）。
 
 | 配置项 | 说明 | 环境变量 |
 |---|---|---|
@@ -349,6 +358,8 @@ python tools/fetch_gguf.py --check
 > ⚠️ 即使有这些保护，也请**先在无关紧要的环境里试用**，不要一开始就把 Agent 指向重要文件或账号。
 
 ### 确定性模板清单（命中 = 1 步完成）
+
+主循环里共 17 个模板，下面列最常用的 11 个（其余见 `agent/core.py` 的模板分派）。
 
 | 任务样式 | 模板 | 真机实测 |
 |---|---|---|

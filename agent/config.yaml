@@ -1,6 +1,13 @@
 # ============================================================
-# LocalCUA 默认配置（此文件会被打包进 wheel，供 `localcua` 命令使用）
-# 想自定义时，请编辑项目根目录的 config.yaml（那份优先于本文件）。
+# LocalCUA 默认配置（此文件会打包进 wheel，供 `localcua` 命令使用）
+# 源码模式优先读项目根目录的 config.yaml；两份内容保持同步，勿单独改本文件。
+# pip 安装后没有项目根目录，请复制一份配置并用
+#   LOCALCUA_CONFIG=<你的 config.yaml>
+# 指定，或直接用 CU_* 环境变量覆盖单个字段。
+# ============================================================
+
+# ============================================================
+# LocalCUA 配置
 # 任何字段都可用环境变量覆盖（前缀 CU_），见各字段注释
 # ============================================================
 
@@ -8,7 +15,14 @@ provider:
   type: ollama                      # ollama | openai（兼容任何 OpenAI 格式后端）
   ollama:
     base_url: http://localhost:11434/api/chat
-    model: qwen3vl:8b               # 环境变量 CU_MODEL 可覆盖
+    model: qwen3vl:8b                # 视觉主模型（看屏幕）环境变量 CU_MODEL 可覆盖
+    # 为什么从 qwen2.5vl:7b 换过来：8B 会主动挑工具（open_app/search_web），
+    # 7B 从来不用、只会自己摸黑点；同样任务快一倍（5.5s vs 12.2s），还能一次给多步动作。
+    # 代价：q4 占 6GB，8GB 显存留给上下文的余量小，num_ctx 别超 8192。
+    # 写代码专用模型（纯文本任务）。同尺寸 coder 版代码能力更强，且写代码不需要看图。
+    # 8GB 显存装不下两个模型，Ollama 会按需换入换出（约 10 秒）。留空 = 不启用。
+    # coder 用完 5 分钟就释放，别占着 4.7GB 把主视觉模型挤走（见 agent.coder_keep_alive）。
+    coder_model: qwen2.5-coder:7b   # 环境变量 CU_CODER_MODEL
   openai:
     base_url: https://api.openai.com/v1/chat/completions
     api_key: ""                     # 推荐用环境变量 CU_OPENAI_KEY
@@ -17,24 +31,82 @@ provider:
 agent:
   max_steps: 40                     # 环境变量 CU_MAX_STEPS
   step_pause: 0.5                   # 每步前停顿(秒) CU_PAUSE；只留给 UI 刷新，1.5 秒×10步=白等 15 秒
-  temperature: 0.1                  # CU_TEMP（与主 config.yaml 保持一致）
+  temperature: 0.1                  # CU_TEMP。模型自带默认就是 0.1；GUI 决策要稳定，
+                                    # 覆盖成 0.2 只会增加「换个像素位置瞎点」的随机性
+  keep_alive: "30m"                 # 主视觉模型常驻；空闲 5 分钟被卸载会害下一句卡 10~20 秒
+  coder_keep_alive: "5m"            # coder 是辅助模型，写完代码尽快释放显存给主模型
   history_window: 6                 # 回看最近几步历史
+  # 跨任务长期记忆：只记「程序这次怎么开起来的」和「哪些做法试过没用」，
+  # 下次开机注入极短一段（<150 字）。测试夹具里关掉，避免污染真实文件。
+  long_memory: true
+  # long_memory_path 默认 <项目根>/data/long_memory.json，可覆盖
   max_screenshots: 50               # 运行中滚动保留的截图张数，超出删最旧；结束时全删
   verify_screen_change: true         # 模型自称"不会产生新内容"时，仍用像素差兜底校验
+  num_ctx: 8192                     # Ollama 上下文窗口（默认 4096 装不下截图+元素清单；CU_NUM_CTX 可覆盖）
+  max_tokens: 512                   # CU_MAX_TOKENS
+  # 微信发送白名单：只有这些会话可以被程序发消息，其他一律拦截不执行。
+  # 误发给真人不可撤销，所以这是"默认拒绝"。想放开就往里加名字。
+  wechat_allowed:
+    - 文件传输助手
+    - 示例联系人A
+    - 示例联系人B                       # 使用者按自己需要添加
+  reflect_on_fail: true             # 失败后单独问一次"为什么/下一步换什么"（多 3~4 秒，思考栏才有内容）
+  # 通用循环开始前 Win+D 回桌面：给模型一个干净起点。
+  # 真机动机：8B 眼前有什么就想点什么 —— 它把 WorkBuddy 底部的输入框当成开始菜单
+  # 搜索框，往里打"今天天气"，连试三次。代价：会把你正开着的窗口全部最小化。
+  home_desktop: true
+  # 「青蛙眼」：只处理画面变化的部分（青蛙的视网膜对静止物体不产生信号）。
+  # 不是把图裁成一小块喂给模型（那会让它彻底失去方位感），而是三件事：
+  #   ① 两帧几乎一样 → 整条视觉流水线跳过
+  #   ② 只有变化区域重跑 OCR，不变区域的元素连名字带坐标复用上一帧
+  #   ③ 给模型的图仍全屏，但把变化区域框出来
+  frog_eye: true
+  # 变化窗口（秒）：上一帧比这还老就作废，按「整屏都变」处理。
+  # 不能设小（比如 1 秒）：一步的周期是 截图→推理 13s→执行，两帧自然间隔 25 秒，
+  # 窗口小于它差分永远不触发。这个窗口只防"任务暂停很久后恢复，基准帧已作废"。
+  frog_eye_window: 120.0
+  frog_eye_model: "popup"           # popup 只在"变化区像个弹窗"时裁剪（推荐）/
+                                     # outline 每步都裁 / dim 红框+压暗 / off 全关
+  # 进场确认：双击 / open_app 之后，用帧差分判断"是不是蹦出了新窗口"，
+  # 再用 Win32 读前台标题 + exe 确认"进去的是谁"，两条都成立就把
+  # 「你已经在某某应用里了，别再发 open_app」作为系统事实强制回灌给模型。
+  # 全程与应用无关 —— 不需要为 WorkBuddy / Dev-C++ 之类写任何界面模板。
+  entry_confirm: true
+  # 动作后「期待有新画面」时不立刻截屏，给 UI 渲染一个观察窗，期间用青蛙眼
+  # 每 0.5s 采样一次变化量（日志会打出 0% → 17% → 25.6% → 25.6% 这种收敛过程）。
+  # stable（默认）：连续两帧变化量相同就提前结束，实测 1~1.5 秒就够；
+  # fixed：旧行为，固定等满 3 秒；off：完全关掉；change_settle 设 0 也等于关掉。
+  # 打字/按键/滚动这类即时动作只采一次（0.5 秒），不跟着等满。
+  # 真机：双击后秒截会截到窗口边框刚出来、内容还没画出来的半帧，
+  # 于是误判「画面没有变化」。
+  change_settle: 3.0
+  change_settle_mode: "stable"
+  # 演示硬保险：卡死判定抓不住「步步不同却没进展」，只有步数上限会跑好几分钟。
+  # 超时主动停并打印最近一步。0 = 不限。
+  max_seconds: 180.0
+  # 测试护栏（默认关）：开启后 send_message 与对话窗口里的回车都不会真正发出，
+  # 流程照常走完，用来验证链路而不打扰真人。
+  # 命令行 --no-send 或环境变量 CU_NO_SEND=1 也能开。
+  no_send: false
+  # 任务点名「在浏览器里 / 用记事本」→ 先把它打开再让模型看屏幕。
+  # 省掉通用循环第一步"我要先打开 XX"（一次完整截图 + 推理，20 秒）。
+  preopen_target: true
+  dialog_guard: true                 # 残留对话框清障：挡路的「另存为」先按 Esc
+  type_guard: true                  # 打字闸：不把字打进用户已打开的文件、不在微信里自己发消息
 
 # grounding：精准点击的关键。
 #   vlm         : 默认。复用主模型自己框出可交互元素，零额外依赖、开箱即用
 #   none        : 关闭检测，回到“像素+绝对坐标”行为（最快）
 #   omniparser  : 高精度可选项，需另起 OmniParser 服务（见 README）
-#   ui_tars     : 使用 UI-TARS 系模型，输出 0~factor 归一化坐标（factor 默认 1000）
-#   yolo_caption: 推荐。本地 ONNX YOLO(OmniParser icon_detect) 检测元素 + 7B 起名 + 程序匹配，
-#                 模型只需用 element_desc 说出要点什么（实测点中率最高，见 tools/ 各实验脚本）
+#   ui_tars     : 直接使用 UI-TARS 模型自身输出的坐标
+#   yolo_caption: 推荐。本地 ONNX YOLO 检测元素 + 7B 起名 + 程序文本匹配
 grounding:
   backend: yolo_caption             # yolo_caption | vlm | none | omniparser | ui_tars
   yolo_caption:
-    conf: 0.3                       # YOLO 置信度阈值
+    conf: 0.3
     max_elements: 80
-    skip_below: 3                   # 缺名元素少于此数就不批量起名（一次调用固定 4~5 秒）
+    skip_below: 3                # 缺名元素少于此数就不批量起名：一次调用固定 4~5 秒
+                                 # 图像编码开销，跟问几个无关，为 1 个图标花 8 秒不值
   vlm:
     max_elements: 40                # 每屏最多返回的元素数
   omniparser:

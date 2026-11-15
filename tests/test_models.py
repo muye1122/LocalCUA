@@ -18,15 +18,15 @@ def test_image_to_data_url():
 def test_modelclient_ollama_default(monkeypatch):
     monkeypatch.setenv("CU_MODEL", "")
     monkeypatch.setenv("CU_PROVIDER", "")
-    cfg = {"provider": {"type": "ollama", "ollama": {"model": "qwen2.5vl:7b"}}}
+    cfg = {"provider": {"type": "ollama", "ollama": {"model": "qwen3vl:8b"}}}
     mc = ModelClient(cfg)
     assert mc.type == "ollama"
-    assert mc.model == "qwen2.5vl:7b"
+    assert mc.model == "qwen3vl:8b"
 
 
 def test_modelclient_env_override(monkeypatch):
     monkeypatch.setenv("CU_MODEL", "llava:latest")
-    cfg = {"provider": {"type": "ollama", "ollama": {"model": "qwen2.5vl:7b"}}}
+    cfg = {"provider": {"type": "ollama", "ollama": {"model": "qwen3vl:8b"}}}
     mc = ModelClient(cfg)
     assert mc.model == "llava:latest"
 

@@ -172,7 +172,7 @@ def main():
 
     # 拉取视觉模型：一直重试到 24:00 或成功（避免没弄好就提前关机）
     import datetime
-    model = "qwen2.5vl:7b"
+    model = "qwen3vl:8b"
     now = datetime.datetime.now()
     deadline = (now + datetime.timedelta(days=1)).replace(
         hour=0, minute=0, second=0, microsecond=0)  # 今晚 24:00
@@ -199,11 +199,11 @@ def main():
     print("DONE_EXE")
 
     if pulled:
-        print("✅ 全部就绪：Ollama 已安装 + qwen2.5vl:7b 模型已就绪，本地视觉识别可用。", flush=True)
+        print("✅ 全部就绪：Ollama 已安装 + qwen3vl:8b 模型已就绪，本地视觉识别可用。", flush=True)
     else:
         # 没拉下来：Ollama 引擎已装好，可改用云端 API 跑 LocalCUA
-        print("⚠️ Ollama 引擎已装好，但 qwen2.5vl:7b 模型因网络限速未拉取成功。"
-              "可用云端 API（填 .env 的 CU_OPENAI_KEY）跑 LocalCUA，或网络好转后手动: ollama pull qwen2.5vl:7b", flush=True)
+        print("⚠️ Ollama 引擎已装好，但 qwen3vl:8b 模型因网络限速未拉取成功。"
+              "可用云端 API（填 .env 的 CU_OPENAI_KEY）跑 LocalCUA，或网络好转后手动: ollama pull qwen3vl:8b", flush=True)
 
 
 if __name__ == "__main__":

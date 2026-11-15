@@ -3,7 +3,7 @@
 """对比测试：本地 coder 模型写 C 代码的一次成功率（真编译、真运行）。
 
   python tools/try_coder.py                # 跑内置的 4 道题
-  python tools/try_coder.py --model qwen2.5vl:7b   # 换成视觉模型对照
+  python tools/try_coder.py --model qwen3vl:8b   # 换成视觉模型对照
 """
 
 import argparse

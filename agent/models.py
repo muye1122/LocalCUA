@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 多模型客户端：统一 chat(多模态) 接口。
-- 默认 Ollama（兼容你现有的本地部署 qwen2.5vl / ui-tars）
+- 默认 Ollama（兼容你现有的本地部署 qwen3vl:8b / ui-tars）
 - 也支持任意 OpenAI 兼容后端（OpenAI / DeepSeek / 本地 vLLM 等）
 
 两种后端的 messages 结构我们统一为 OpenAI 风格：
@@ -43,7 +43,7 @@ class ModelClient:
         if self.type == "ollama":
             o = p.get("ollama", {}) or {}
             self.base_url = o.get("base_url", "http://localhost:11434/api/chat")
-            self.model = os.environ.get("CU_MODEL") or o.get("model", "qwen2.5vl:7b")
+            self.model = os.environ.get("CU_MODEL") or o.get("model", "qwen3vl:8b")
             # 代码专用模型：纯文本任务（写代码）用 coder 版，同尺寸下代码能力明显更强；
             # 视觉任务仍用上面的 vl 版。8GB 显存装不下两个，Ollama 会按需换入换出（约 10s）。
             # 留空 = 不启用，所有任务都用主模型。

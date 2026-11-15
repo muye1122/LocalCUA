@@ -14,7 +14,7 @@ sys.path.insert(0, ".")
 from agent.core import AgentSession   # noqa: E402
 
 
-def chat(system, user, model="qwen2.5vl:7b"):
+def chat(system, user, model="qwen3vl:8b"):
     body = json.dumps({
         "model": model, "stream": False,
         "messages": [{"role": "system", "content": system},

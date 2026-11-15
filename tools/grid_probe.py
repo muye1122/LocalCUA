@@ -24,7 +24,7 @@ import pyautogui
 from PIL import Image, ImageDraw
 
 OLLAMA = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
-MODEL = os.environ.get("CU_MODEL", "qwen2.5vl:7b")
+MODEL = os.environ.get("CU_MODEL", "qwen3vl:8b")
 GRID_COLOR = (255, 0, 128)
 TEXT_BG = (255, 255, 255)
 

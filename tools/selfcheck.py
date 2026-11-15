@@ -82,7 +82,8 @@ def main():
         img = None
 
     # 4) OLLAMA 本地服务与模型
-    model_name = ((cfg.get("model") or {}).get("name")) or "qwen2.5vl:7b"
+    model_name = (((cfg.get("provider") or {}).get("ollama") or {})
+                  .get("model")) or "qwen3vl:8b"
     try:
         import requests
 
@@ -105,7 +106,10 @@ def main():
     # 5) 视觉定位（ONNX），这一步决定「眼睛」是否好使
     onnx_path = os.path.join("models", "icon_detect", "model.onnx")
     if not os.path.exists(onnx_path):
-        check("FAIL", "缺少视觉模型", f"{onnx_path} 不存在，元素定位会退化成纯模型猜坐标")
+        check("FAIL", "缺少元素检测权重",
+              f"{onnx_path} 不存在，默认 yolo_caption 无法初始化。\n"
+              "→ 跑一次 python tools/setup_grounding.py 自动下载（约 80MB）\n"
+              "→ 或把 config.yaml 的 grounding.backend 改成 vlm 跳过这一步")
     elif img is not None:
         try:
             from agent.yolo_grounding import detect_elements

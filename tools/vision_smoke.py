@@ -13,7 +13,7 @@ import pyautogui
 from PIL import Image
 
 API = "http://localhost:11434/api/chat"
-MODEL = "qwen2.5vl:7b"
+MODEL = "qwen3vl:8b"
 MAXW = 1280
 
 
