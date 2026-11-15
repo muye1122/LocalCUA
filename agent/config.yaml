@@ -95,11 +95,11 @@ agent:
   type_guard: true                  # 打字闸：不把字打进用户已打开的文件、不在微信里自己发消息
 
 # grounding：精准点击的关键。
-#   vlm         : 默认。复用主模型自己框出可交互元素，零额外依赖、开箱即用
+#   vlm         : 零额外依赖。复用主模型自己框元素（需把 backend 改成 vlm）
 #   none        : 关闭检测，回到“像素+绝对坐标”行为（最快）
 #   omniparser  : 高精度可选项，需另起 OmniParser 服务（见 README）
 #   ui_tars     : 直接使用 UI-TARS 模型自身输出的坐标
-#   yolo_caption: 推荐。本地 ONNX YOLO 检测元素 + 7B 起名 + 程序文本匹配
+#   yolo_caption: 默认且推荐。本地 ONNX YOLO 检测元素 + 8B 起名 + 程序文本匹配
 grounding:
   backend: yolo_caption             # yolo_caption | vlm | none | omniparser | ui_tars
   yolo_caption:
