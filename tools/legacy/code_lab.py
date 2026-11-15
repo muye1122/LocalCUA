@@ -11,8 +11,8 @@ code_lab —— 验证「模型写 C 代码 → 编译 → 读报错 → 自己�
   这样"写-编-改"能闭环，而且全程离线。
 
 用法：
-  python tools/code_lab.py "写一个函数判断字符串是否回文，并在 main 里测试"
-  python tools/code_lab.py --rounds 3 "用冒泡排序对数组排序"
+  python tools/legacy/code_lab.py "写一个函数判断字符串是否回文，并在 main 里测试"
+  python tools/legacy/code_lab.py --rounds 3 "用冒泡排序对数组排序"
 """
 
 import argparse
@@ -24,7 +24,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 import yaml  # noqa: E402

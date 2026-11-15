@@ -1,9 +1,9 @@
 """等 Ollama 模型拉取完成后自动关机。
 
 用法：
-    python tools/wait_model_then_shutdown.py                  # 默认 qwen3vl:8b，完成后 120 秒关机
-    python tools/wait_model_then_shutdown.py --no-shutdown    # 只等不关机（调试用）
-    python tools/wait_model_then_shutdown.py --model qwen3vl:8b --shutdown-delay 60
+    python tools/legacy/wait_model_then_shutdown.py                  # 默认 qwen3vl:8b，完成后 120 秒关机
+    python tools/legacy/wait_model_then_shutdown.py --no-shutdown    # 只等不关机（调试用）
+    python tools/legacy/wait_model_then_shutdown.py --model qwen3vl:8b --shutdown-delay 60
 
 行为：
   1. 每 15 秒轮询 `ollama list`，模型出现即视为完成；

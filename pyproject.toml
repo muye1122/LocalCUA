@@ -41,9 +41,9 @@ include-package-data = true
 [tool.setuptools.package-data]
 agent = ["config.yaml"]
 
-# 只收集 tests/。tools/ 下有几个名字带 test 的「诊断探针」
-# （如 text_select_test.py），它们是直接跑的脚本，模块级就要读 data/ 下的
-# 真实截图清单，被 pytest 导入会在收集阶段直接抛异常，整轮测试连跑都跑不起来。
+# 只收集 tests/。一次性真机实验脚本已移到 tools/legacy/
+# （如 text_select_test.py），它们模块级就要读 data/ 下的真实截图清单，
+# 被 pytest 导入会在收集阶段直接抛异常，整轮测试连跑都跑不起来。
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

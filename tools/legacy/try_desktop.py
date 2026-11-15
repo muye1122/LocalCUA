@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 """验证「桌面图标优先」这条路：读清单 → 匹配 → 打印坐标（默认不点击）。
 
-  python tools/try_desktop.py                 # 只读验证，打印所有图标 + pyautogui 坐标
-  python tools/try_desktop.py Dev-C++         # 只验证匹配这一个名字
-  python tools/try_desktop.py Dev-C++ --click # 真的 Win+D + 双击（会打开程序）
+  python tools/legacy/try_desktop.py                 # 只读验证，打印所有图标 + pyautogui 坐标
+  python tools/legacy/try_desktop.py Dev-C++         # 只验证匹配这一个名字
+  python tools/legacy/try_desktop.py Dev-C++ --click # 真的 Win+D + 双击（会打开程序）
 """
 
 import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from agent.core import AgentSession  # noqa: E402
 

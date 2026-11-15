@@ -1,18 +1,20 @@
 """真机验证「单击→双击」改写：找一个看得见的元素，走完整动作管线点它，看结果。
 
 用法：
-    python tools/try_dblclick.py 测试
-    python tools/try_dblclick.py 测试 --click      # 真的点下去（默认只测算，不动鼠标）
+    python tools/legacy/try_dblclick.py 测试
+    python tools/legacy/try_dblclick.py 测试 --click      # 真的点下去（默认只测算，不动鼠标）
 
 默认是干跑（打印坐标和改写结果，不发鼠标事件）—— 想真点加 --click。
 """
 
+import os
 import sys
 import time
 
 import yaml
 
-sys.path.insert(0, r"D:\LocalCUA")
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 
 from agent.core import AgentSession   # noqa: E402
 

@@ -1,8 +1,8 @@
 """真机演示：给 LocalCUA 一个任务，看它自己循环「截屏 -> 思考 -> 动作」。
 
 用法:
-    python tools/live_demo.py "打开记事本并输入你好"
-    python tools/live_demo.py "打开记事本" --steps 12
+    python tools/legacy/live_demo.py "打开记事本并输入你好"
+    python tools/legacy/live_demo.py "打开记事本" --steps 12
 
 模型 ask 时自动回一句提示（免人工输入），方便无人值守跑演示。
 """
@@ -12,7 +12,7 @@ import os
 import sys
 import threading
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from agent.config import load_config
 from agent.core import AgentSession

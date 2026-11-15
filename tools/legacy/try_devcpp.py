@@ -9,7 +9,7 @@ try_devcpp —— 最小验证：能不能把 C 代码逐字敲进 Dev-C++ 的�
 跑之前：把鼠标放一边别动，脚本会接管 5~10 秒。
 
 用法：
-  python tools/try_devcpp.py
+  python tools/legacy/try_devcpp.py
 
 成功后你会看到 Dev-C++ 里出现一段求斐波那契前 10 项的 C 代码，
 截图存在 data/devcpp_test/ 下。
@@ -19,7 +19,7 @@ import sys
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 import yaml  # noqa: E402

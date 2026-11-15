@@ -1,6 +1,6 @@
 """视觉冒烟测试：截屏 → 发给本地 Ollama 视觉模型 → 看它能否描述并给出元素坐标。
 
-用法: python tools/vision_smoke.py
+用法: python tools/legacy/vision_smoke.py
 """
 
 import base64

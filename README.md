@@ -290,7 +290,7 @@ python tools/fetch_gguf.py --check
 
 - 批量起名（一步只调 1 次）与逐个起名**共用同一张表**：批量已经问过的，不再单独问。
 - 没名字的元素超过 8 个就放弃逐个补问，改用位置分。
-- 新增实测探针 `tools/try_locate.py`（不碰鼠标）：定位从 **16.2s/次 → 0.0s/次**。
+- 新增实测探针 `tools/legacy/try_locate.py`（不碰鼠标）：定位从 **16.2s/次 → 0.0s/次**。
 
 同时给定位加了「位置对、东西错」的硬校验：目标里的实词（`任务栏最右侧的微信图标` → `微信`）
 必须出现在元素名字里，否则**宁可不点**。真机出现过靠位置分 1.15 把电池图标当成微信图标、
@@ -402,7 +402,8 @@ LocalCUA/
 │   ├── long_memory.py     # 跨任务长期记忆（data/long_memory.json）
 │   └── core.py            # 主循环编排与 17 个确定性模板
 ├── ui/web.py              # FastAPI + 自包含页面 + WebSocket
-├── tools/                 # 真机验证 / 自检 / 模型下载等一次性脚本
+├── tools/                 # 常用工具：跑任务 / 自检 / 权重与模型下载 / 沙箱
+│   └── legacy/            # 24 个一次性真机实验脚本（踩坑结论的可复现证据）
 ├── tests/                 # 281 项 pytest（假模型 + 假键鼠，不联网不占 GPU）
 ├── .github/workflows/ci.yml  # 仅做 compileall 语法检查
 └── README.md              # 含「技术复盘：真机踩坑链」

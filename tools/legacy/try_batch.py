@@ -3,7 +3,7 @@
 """探针：模型在新提示词下会不会主动给 actions 数组（动作序列）。
 
 不碰鼠标键盘，只跟 Ollama 说话。用法：
-    python tools/try_batch.py
+    python tools/legacy/try_batch.py
 """
 import json
 import sys
